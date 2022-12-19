@@ -1,6 +1,9 @@
 <?php
 
 use Illuminate\Support\Facades\Route;
+use Illuminate\Support\Facades\Http;
+use App\Http\Controllers\ClientsController;
+use GuzzleHttp\Client;
 
 /*
 |--------------------------------------------------------------------------
@@ -12,7 +15,5 @@ use Illuminate\Support\Facades\Route;
 | contains the "web" middleware group. Now create something great!
 |
 */
-
-Route::get('/', function () {
-    return view('welcome');
-});
+Route::get('/', [ClientsController::class, 'index']);
+Route::get('/users/transaction/{client_id}', [ClientsController::class, 'transaction'])->name('transaction');
