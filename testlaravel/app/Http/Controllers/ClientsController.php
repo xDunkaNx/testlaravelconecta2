@@ -4,11 +4,8 @@ namespace App\Http\Controllers;
 
 use App\Custom\Fetch;
 use App\Custom\Paginate;
-use Illuminate\Pagination\Paginator;
+use App\Models\RegisterPetition;
 use Illuminate\Http\Request;
-use Illuminate\Pagination\LengthAwarePaginator;
-use Illuminate\Support\Facades\Http;
-use Illuminate\Support\Collection;
 
 class ClientsController extends Controller
 {
@@ -32,6 +29,8 @@ class ClientsController extends Controller
         //ordenamos de manera descendiente tomando como parametro de ordenamiento a created_at
         $dates = array_map('strtotime', array_column($data, 'created_at'));
         array_multisort($dates, SORT_DESC, $data);
+
+        //el segundo parametro de la paginacion es para indicar cuantos registros contrendra cada pagina
         $data = $this->paginate->paginate($data, 50);
         return view('clients.index', compact('data'));
     }
@@ -56,23 +55,47 @@ class ClientsController extends Controller
     public function getInfoUser(Request $request)
     {
         try {
+            //nos aseguramos que se nos envie el id
             $validatedData = $request->validate([
                 'id' => 'required|numeric'
             ]);
             $cliente = [];
             $idClient = $validatedData["id"];
-            $token = env("TOKEN_API_CONECTADOS");
-            $url = env("URL_SERVER_API");
-            $concatUserToken = '/users/' . $token;
             $infoUser = $this->http->get(env("URL_SERVER_API") . SELF::URL_USERS . env("TOKEN_API_CONECTADOS"));
             $transactionUser = $this->http->get(env("URL_SERVER_API") . SELF::URL_USERS . env("TOKEN_API_CONECTADOS") . SELF::URL_TRANSACTION . $idClient);
+            if ($infoUser === null || $transactionUser === null) {
+                return response()->json([
+                    'message' => 'Token Incorrecto'
+               ],401);            
+            }
+            
             foreach ($infoUser as $elem) {
                 if ($elem["id"] == $idClient) {
                     $cliente['infoUser'] = $elem;
                     break;
                 }
             }
+
+            //registramos a manera de log la informacion consultada
             $cliente['transactionUser'] = $transactionUser;
+            $registerLog = new RegisterPetition;
+            $registerLog->segmentation_id = $cliente["infoUser"]["segmentation_id"];
+            $registerLog->program_id = $cliente["infoUser"]["program_id"];
+            $registerLog->user_id = $cliente["infoUser"]["user_id"];
+            $registerLog->netcommerce_id = $cliente["infoUser"]["netcommerce_id"];
+            $registerLog->one_signal_player_id = $cliente["infoUser"]["one_signal_player_id"];
+            $registerLog->identification_type_id = $cliente["infoUser"]["identification_type_id"];
+            $registerLog->identification_number = $cliente["infoUser"]["identification_number"];
+            $registerLog->mobile_number = $cliente["infoUser"]["mobile_number"];
+            $registerLog->meta = $cliente["infoUser"]["meta"];
+            $registerLog->insitu_code_reference = $cliente["infoUser"]["insitu_code_reference"];
+            $registerLog->birth_date = $cliente["infoUser"]["birth_date"];
+            $registerLog->active = $cliente["infoUser"]["active"];
+            $registerLog->has_updated_info = $cliente["infoUser"]["has_updated_info"];
+            $registerLog->inactivate_reason = $cliente["infoUser"]["inactivate_reason"];
+            $registerLog->account_lockout_date = $cliente["infoUser"]["account_lockout_date"];
+            $registerLog->state_user_id = $cliente["infoUser"]["state_user_id"];
+            $registerLog->save();
             return response()->json([
                 'cliente' => $cliente
             ]);
