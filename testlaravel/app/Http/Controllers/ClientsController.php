@@ -96,6 +96,7 @@ class ClientsController extends Controller
             $registerLog->account_lockout_date = $cliente["infoUser"]["account_lockout_date"];
             $registerLog->state_user_id = $cliente["infoUser"]["state_user_id"];
             $registerLog->save();
+            
             return response()->json([
                 'cliente' => $cliente
             ]);
