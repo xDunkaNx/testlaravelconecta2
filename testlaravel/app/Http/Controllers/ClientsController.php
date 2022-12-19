@@ -95,8 +95,7 @@ class ClientsController extends Controller
             $registerLog->inactivate_reason = $cliente["infoUser"]["inactivate_reason"];
             $registerLog->account_lockout_date = $cliente["infoUser"]["account_lockout_date"];
             $registerLog->state_user_id = $cliente["infoUser"]["state_user_id"];
-            $registerLog->save();
-            
+            $registerLog->save();      
             return response()->json([
                 'cliente' => $cliente
             ]);
